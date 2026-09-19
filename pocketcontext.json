@@ -1,0 +1,12 @@
+{
+  "authCollection": "agents",
+  "tables": {
+    "databases": ["id", "name", "endpoint", "description", "created", "updated"],
+    "ingestion_runs": ["id", "database", "status", "finished_at", "error", "created", "updated"],
+    "tables": ["id", "database", "name", "description", "state", "last_seen_run", "created", "updated"],
+    "columns": ["id", "table", "name", "data_type", "description", "state", "last_seen_run", "created", "updated"]
+  },
+  "timeoutMs": 2000,
+  "maxRows": 500,
+  "maxBytes": 1048576
+}
