@@ -1,6 +1,6 @@
 # MetaContext
 
-A relational metadata catalog operated through a coding agent. MetaContext ingests the application schema exposed by a [PocketContext](https://github.com/amiorin/pocketcontext) server and stores database, table, and column metadata in a separate PocketBase database. Agents query the catalog with SQL; ingestion and agent edits use PocketBase's records API.
+A relational metadata catalog operated through a coding agent. MetaContext ingests the application schema exposed by a [PocketContext](https://github.com/pocketcontext/pocketcontext) server and stores database, table, and column metadata in a separate PocketBase database. Agents query the catalog with SQL; ingestion and agent edits use PocketBase's records API.
 
 The first connector targets SQLite `main` through `GET /api/context/schema`. It collects exposed table names, column names, and SQL types. It does not read source application rows or open the source SQLite file. Auth collections, internal tables, and unexposed fields remain outside the catalog. This is a catalog of the exposed schema, not the full physical database. It does not collect indexes, constraints, PocketBase field semantics, views, or lineage.
 
