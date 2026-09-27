@@ -63,6 +63,24 @@ Only one ingestion run can be `running` per database. An interrupted process can
 
 All catalog agents share visibility and access. SQL does not inherit per-record API rules. Database registrations contain nonsecret endpoints; credentials stay in the ingestion environment. See [schema](agent/schema.md), [workflows](agent/workflows.md), and [examples](agent/examples.md).
 
+## Request tracing
+
+The pinned server enables a bounded in-memory trace buffer for `metacontext`. Ordinary requests do not record traces unless the client sends `X-Context-Trace: 1`. SQL text additionally requires `X-Context-Capture-Sql: 1`; although the server permits SQL capture, the wrapper sends this only with explicit `--capture-sql`. Source servers must independently adopt compatible buffer configuration. No source rows are read by metadata ingestion.
+
+Use the ObserveContext skill's multi-origin wrapper to measure both catalog SQL/REST and source schema HTTP requests under one owned operation. Configure and authenticate ObserveContext separately from `METACONTEXT_TOKEN` and `SOURCE_TOKEN`, then use the registered source's exact origin:
+
+```sh
+python3 /path/to/observecontext/scripts/oc.py capture \
+  --service metacontext.ingestion --upload \
+  --origin "metacontext.client=$METACONTEXT_URL" \
+  --origin "source.metadata=https://source.example.com" \
+  ingestion/sync.py --database <database-record-id>
+```
+
+`--origin` mappings are explicit allowlists, not wildcard discovery: the catalog and source have distinct client service labels and retain their own authentication. The wrapper retrieves each server trace only from that request's origin using its source token in memory. It refuses cross-origin credential forwarding and never includes the ObserveContext destination as a capture target. Authentication, browser, files, realtime and arbitrary non-API paths are outside capture scope.
+
+Source buffers expire after 120 seconds and may lose telemetry on restart or capacity limits. Completed client/server pairs are persisted in ObserveContext's private account-bound local queue; retry delivery with `oc.py flush`. Capture preserves the ingestion command's exit status when telemetry delivery fails. Server tokens, REST payloads and results never enter the queue. See ObserveContext's instrumentation documentation for timing boundaries and retention limits.
+
 ## Verify
 
 Use Python 3.12 or later. The integration test also needs a sibling DealContext checkout containing the commit in `DEALCONTEXT_TEST_VERSION`; it copies that committed fixture into a temporary directory and leaves the checkout untouched. Override its location with `--dealcontext /path/to/dealcontext`.

@@ -19,3 +19,7 @@ Resolve record IDs through SQL before patching curated descriptions through REST
 ## Explain missing objects
 
 Inspect the source's current schema exposure and the latest successful run. An object may be missing because it was renamed, deleted, or removed from the server's exposed schema. Report that uncertainty. Do not call it physically deleted based only on the catalog.
+
+## Trace an ingestion
+
+Use the ObserveContext `capture --upload` wrapper with two explicit `--origin CLIENT_SERVICE=HTTP_ORIGIN` mappings: the catalog origin and the registered source origin. Use `--service metacontext.ingestion` for the shared operation. Keep catalog, source and ObserveContext authentication separate. The source connector still reads only `/api/context/schema`; tracing does not authorize source-row queries. Add `--capture-sql` only when catalog SQL text may be retained by the uploader and authorized ObserveContext readers. Retry pending uploads with `oc.py flush`; telemetry failures do not change the importer exit status. See README for the complete command.
