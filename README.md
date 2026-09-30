@@ -91,3 +91,50 @@ python3 tests/integration.py --binary ../pocketcontext/bin/pocketcontext
 ```
 
 The integration test uses isolated temporary databases. Restart the server after schema or SQL exposure changes. Keep `POCKETCONTEXT_VERSION` aligned with intentionally adopted server changes.
+
+## Browser reader and permanent links
+
+The authenticated reader at `/` provides a collection chooser, server-side text search,
+paginated records, collection-specific filters, and outgoing/reverse relationship links.
+Use `/#/<collection>/<record-id>` for a current-record permalink. Renames preserve this
+identity; deletion or loss of access may make a link unavailable. Search/filter state is
+stored in the hash query, and **Copy record link** omits that state. **Copy search link**
+shares the current collection/filter view. Links do not grant access or preserve history.
+The destination survives password sign-in and reload. MetaContext uses provisioned
+agent accounts; no Google provider is configured by this reader.
+
+Records are read through the existing authenticated SQL endpoint. The browser never
+queries auth collections, writes business records, or acknowledges anything on opening.
+Relationship labels use only authorized SQL; unavailable targets reveal no resolved
+label. User-directory records contain display names only. Tokens are stored per tab in
+session storage, cleared on sign-out; refresh on focus or the **Refresh** button reloads
+current data. Markdown never executes HTML or loads remote images. Record metadata is
+collapsed below business fields. Currency amounts retain their original minor-unit
+values alongside formatted currency. No mixed-currency totals are calculated.
+
+The reader's explicit navigation model lives in `ui/src/config.ts`. Keep its schema
+snapshot aligned with the exported schema when changing columns; `tests/reader.py`
+compares it with the real authenticated schema. The UI is built into the application
+image; for local development build it before starting the ordinary server:
+
+```sh
+cd ui
+pnpm install --frozen-lockfile
+pnpm typecheck
+pnpm test
+pnpm build
+pnpm exec playwright install chromium
+pnpm e2e
+cd ..
+python3 tests/reader.py --binary /absolute/path/to/pinned/pocketcontext --browser
+```
+
+Use Node.js 24 and pnpm 10.33.2. The browser smoke uses synthetic records and an isolated
+temporary database. It tests actual production assets, authentication, direct links,
+reload, search pagination, mobile navigation, and SQL/schema compatibility. Unit and
+mocked browser tests additionally cover query escaping, malformed routes, relationship
+labels, and inert Markdown. Generated assets are not committed.
+For browser Google OAuth, register the application's own
+`https://<application-host>/api/oauth2-redirect` URI in its existing OAuth client.
+
+MetaContext is code-ready only: no production hostname, deployment, or cloud resources are created. Its optional Dockerfile serves port 8080 with state mounted at `/storage`; deployment and backups require separate operator configuration.

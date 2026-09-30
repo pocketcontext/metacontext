@@ -13,3 +13,5 @@ A database registration is persistent identity. Its endpoint may change without 
 Descriptions are curated. Ingestion must not overwrite them. Only finalize missing-object reconciliation after a complete successful schema scan. Preserve retry safety after partial writes. Stop an interrupted worker before marking its running ingestion record failed through REST and retrying.
 
 Before editing, inspect Git status and preserve user changes. Run unit tests and `python3 tests/integration.py --binary ../pocketcontext/bin/pocketcontext` after implementation changes. Keep `POCKETCONTEXT_VERSION` aligned with the tested server. Report changed repositories and checks performed.
+
+Reader changes: run `pnpm typecheck`, `pnpm test`, `pnpm build`, and `pnpm e2e` in `ui/`, then `python3 tests/reader.py --binary /absolute/path/to/pinned/pocketcontext --browser`. Keep all browser data access authenticated and read-only.

@@ -23,3 +23,7 @@ Inspect the source's current schema exposure and the latest successful run. An o
 ## Trace an ingestion
 
 Use the ObserveContext `capture --upload` wrapper with two explicit `--origin CLIENT_SERVICE=HTTP_ORIGIN` mappings: the catalog origin and the registered source origin. Use `--service metacontext.ingestion` for the shared operation. Keep catalog, source and ObserveContext authentication separate. The source connector still reads only `/api/context/schema`; tracing does not authorize source-row queries. Add `--capture-sql` only when catalog SQL text may be retained by the uploader and authorized ObserveContext readers. Retry pending uploads with `oc.py flush`; telemetry failures do not change the importer exit status. See README for the complete command.
+
+## Human record links
+
+For a locally or independently deployed catalog, link the configured origin plus `/#/<collection>/<record-id>`. Links preserve catalog identity through edits; they do not grant access or prove a physically deleted source object. No production MetaContext origin is configured by this repository.

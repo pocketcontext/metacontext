@@ -1,0 +1,74 @@
+name: Catalog and reader checks
+on:
+  push:
+  pull_request:
+  workflow_call:
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          path: metacontext
+          persist-credentials: false
+      - name: Read server revision
+        id: server
+        shell: bash
+        run: |
+          revision=$(cat metacontext/POCKETCONTEXT_VERSION)
+          [[ "$revision" =~ ^[0-9a-f]{40}$ ]]
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: pocketcontext/pocketcontext
+          ref: ${{ steps.server.outputs.revision }}
+          path: pocketcontext
+          persist-credentials: false
+      - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
+        with:
+          go-version-file: pocketcontext/go.mod
+          cache-dependency-path: pocketcontext/go.sum
+      - name: Build server
+        working-directory: pocketcontext
+        # The flags of pocketcontext's Makefile.
+        run: CGO_ENABLED=1 go build -tags sqlite_math_functions -o bin/pocketcontext ./cmd/pocketcontext
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 24
+      - name: Build and test authenticated reader
+        run: |
+          npm install --global pnpm@10.33.2
+          cd metacontext/ui
+          pnpm install --frozen-lockfile
+          pnpm typecheck
+          pnpm test
+          pnpm build
+          pnpm exec playwright install --with-deps chromium
+          pnpm e2e
+          cd ../..
+          python3 metacontext/tests/reader.py --binary pocketcontext/bin/pocketcontext --browser
+      - name: Catalog unit checks
+        run: cd metacontext && python3 -m unittest discover -s tests
+      - name: Read fixture revision
+        id: fixture
+        run: echo "revision=$(cat metacontext/DEALCONTEXT_TEST_VERSION)" >> "$GITHUB_OUTPUT"
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          repository: pocketcontext/dealcontext
+          ref: ${{ steps.fixture.outputs.revision }}
+          path: dealcontext
+          persist-credentials: false
+      - name: Catalog integration checks
+        run: python3 metacontext/tests/integration.py --binary pocketcontext/bin/pocketcontext
+      - name: Optional local container smoke
+        run: |
+          docker build -t metacontext:ci metacontext
+          docker run --rm -d --name metacontext-reader-ci -p 127.0.0.1:18080:8080 metacontext:ci
+          trap 'docker stop metacontext-reader-ci' EXIT
+          for attempt in $(seq 1 60); do
+            if curl --fail --silent http://127.0.0.1:18080/ > /tmp/metacontext-reader.html; then break; fi
+            sleep 1
+          done
+          grep -q 'id="root"' /tmp/metacontext-reader.html
