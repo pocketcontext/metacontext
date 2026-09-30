@@ -1,5 +1,11 @@
 # MetaContext
 
+## Archived for now
+
+As of 2026-09-30, MetaContext is archived. It was intended as an OpenMetadata replacement, but there is no current need for that catalog. It was never deployed; no production service needs to be shut down or migrated.
+
+MetaContext is excluded from routine changes across all active Context apps, including compatibility, UI, authentication, dependency, and server-pin updates. Its existing pins and documentation are historical references, not a commitment to compatibility with current apps. Resume development only after an explicit decision to reactivate it and validate its dependencies and tests. The setup and validation instructions below are retained for that purpose.
+
 A relational metadata catalog operated through a coding agent. MetaContext ingests the application schema exposed by a [PocketContext](https://github.com/pocketcontext/pocketcontext) server and stores database, table, and column metadata in a separate PocketBase database. Agents query the catalog with SQL; ingestion and agent edits use PocketBase's records API.
 
 The first connector targets SQLite `main` through `GET /api/context/schema`. It collects exposed table names, column names, and SQL types. It does not read source application rows or open the source SQLite file. Auth collections, internal tables, and unexposed fields remain outside the catalog. This is a catalog of the exposed schema, not the full physical database. It does not collect indexes, constraints, PocketBase field semantics, views, or lineage.

@@ -1,5 +1,7 @@
 # MetaContext
 
+MetaContext is archived for now as of 2026-09-30 and was never deployed. Exclude it from routine changes across all active Context apps, including compatibility, UI, authentication, dependency, and server-pin maintenance. Do not update it because a workspace-wide instruction says "all Context apps." Resume development only after an explicit decision to reactivate it. The instructions below apply to explicitly authorized reactivation work; retained pins and workflows are historical and must be validated before reuse.
+
 Read `README.md`, `agent/schema.md`, `agent/workflows.md`, and `agent/examples.md` before catalog data operations.
 
 MetaContext owns the catalog schema, ingestion pipeline, configuration, and agent workflows. PocketContext supplies the application-independent server. Preserve that repository boundary.
